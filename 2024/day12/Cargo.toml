@@ -1,0 +1,12 @@
+[package]
+name = "day12"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "1"
+path = "src/one.rs"
+
+[[bin]]
+name = "2"
+path = "src/two.rs"
