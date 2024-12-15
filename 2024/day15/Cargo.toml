@@ -1,0 +1,15 @@
+[package]
+name = "day15"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+colored = "2.1.0"
+
+[[bin]]
+name = "one"
+path = "src/one.rs"
+
+[[bin]]
+name = "two"
+path = "src/two.rs"
