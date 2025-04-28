@@ -56,12 +56,9 @@ fn search(current: &str, rules: &HashMap<String, Vec<Bag>>) -> HashSet<String> {
 }
 
 fn count(current: &str, rules: &HashMap<String, Vec<Bag>>) -> u32 {
-    let mut total = 1;
-    if let Some(entry) = rules.get(current) {
-        for bag in entry.iter() {
-            // println!("Current: {}, {} * bag: {} ", current, bag.nb, bag.name);
-            total += bag.nb * count(&bag.name, rules);
-        }
-    }
-    total
+    rules
+        .get(current)
+        .unwrap()
+        .iter()
+        .fold(1, |acc, bag| acc + bag.nb * count(&bag.name, rules))
 }
