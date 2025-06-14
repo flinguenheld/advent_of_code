@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 type Hvac = Vec<Vec<char>>;
 type Cache = Vec<Vec<u32>>;
@@ -36,8 +36,8 @@ impl Point {
 }
 
 fn main() {
-    // let path = "input.txt";
-    let path = "input_example.txt";
+    let path = "input.txt";
+    // let path = "input_example.txt";
 
     let hvac: Hvac = std::fs::read_to_string(path)
         .unwrap()
@@ -65,7 +65,7 @@ fn main() {
     let mut cache = vec![vec![u32::MAX; hvac[0].len()]; hvac.len()];
 
     for from in targets.iter() {
-        cache = fill_values(&hvac, cache, *from, 0);
+        cache = fill_cache(&hvac, cache, *from);
 
         let from_value = hvac[from.row][from.col] as u32 - 48;
         for (i, to) in targets.iter().enumerate().filter(|(_, pt)| *pt != from) {
@@ -104,15 +104,22 @@ fn main() {
     println!("Part two: {}", mini);
 }
 
-fn fill_values(hvac: &Hvac, mut cache: Cache, current_point: Point, current_value: u32) -> Cache {
-    if current_value < cache[current_point.row][current_point.col] {
-        cache[current_point.row][current_point.col] = current_value;
+fn fill_cache(hvac: &Hvac, mut cache: Cache, start: Point) -> Cache {
+    let mut queue = VecDeque::new();
+    queue.push_front(start);
 
+    cache[start.row][start.col] = 0;
+
+    while let Some(current_point) = queue.pop_front() {
+        let value = cache[current_point.row][current_point.col];
         for neighbour in current_point.neighbours(hvac) {
-            cache = fill_values(hvac, cache, neighbour, current_value + 1);
+            if cache[neighbour.row][neighbour.col] == u32::MAX {
+                cache[neighbour.row][neighbour.col] = value + 1;
+                queue.push_back(neighbour);
+            }
         }
     }
-    // print_cache(&cache);
+
     cache
 }
 
