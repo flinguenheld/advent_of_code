@@ -1,1 +1,1 @@
-ne,ne,ne
+se,sw,se,sw,sw
