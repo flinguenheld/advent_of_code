@@ -1,40 +1,8 @@
-#[derive(Debug, Clone)]
-struct Scanner {
-    up: bool,
-    length: usize,
-    current: usize,
-}
-
-impl Scanner {
-    fn new(length: usize) -> Self {
-        Scanner {
-            up: true,
-            length,
-            current: 0,
-        }
-    }
-
-    fn next(&mut self) {
-        if self.length > 0 {
-            match self.up {
-                true => self.current += 1,
-                false => self.current -= 1,
-            };
-
-            if self.current == 0 {
-                self.up = true;
-            } else if self.current == self.length - 1 {
-                self.up = false;
-            }
-        }
-    }
-}
-
 fn main() {
     let path = "input.txt";
     // let path = "input_example.txt";
 
-    let mut input: Vec<Scanner> = Vec::new();
+    let mut scanners: Vec<usize> = Vec::new();
     let mut index = 0;
     for line in std::fs::read_to_string(path).unwrap().lines() {
         let (left, right) = line.split_once(": ").unwrap();
@@ -43,46 +11,33 @@ fn main() {
         let right = right.parse::<usize>().unwrap();
 
         while left > index {
-            input.push(Scanner::new(0));
+            scanners.push(0);
             index += 1;
         }
 
-        input.push(Scanner::new(right));
+        scanners.push(right);
         index += 1;
     }
-    // dbg!(&input);
-
-    let mut scanners = input.clone();
+    // dbg!(&scanners);
 
     let mut total = 0;
-    for i in 0..scanners.len() {
-        if scanners[i].length > 0 && scanners[i].current == 0 {
-            total += i * scanners[i].length;
+    for (i, scanner) in scanners.iter().enumerate().skip(1) {
+        if *scanner > 0 && (i).rem_euclid(2 * (scanner - 1)) == 0 {
+            total += i * scanner;
         }
-
-        scanners.iter_mut().for_each(|s| s.next());
     }
 
     println!("Part one: {}", total);
 
     // --
-    let mut i = 0;
-    let mut scanners = input.clone();
-
-    while !test(scanners.clone()) {
-        i += 1;
-        scanners.iter_mut().for_each(|s| s.next());
+    let mut delay = 1;
+    while scanners
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| **s > 0)
+        .any(|(i, s)| (i + delay).rem_euclid(2 * (s - 1)) == 0)
+    {
+        delay += 1;
     }
-    println!("Part two: {}", i);
-}
-
-fn test(mut scanners: Vec<Scanner>) -> bool {
-    for i in 0..scanners.len() {
-        if scanners[i].length > 0 && scanners[i].current == 0 {
-            return false;
-        }
-
-        scanners.iter_mut().for_each(|s| s.next());
-    }
-    true
+    println!("Part two: {}", delay);
 }
