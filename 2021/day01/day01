@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# FILE="input_example.txt"
+FILE="input.txt"
+
+count() {
+
+  VALID=0
+  PREVIOUS="999999"
+  while read -r LINE; do
+
+    if [[ "$PREVIOUS" -lt "$LINE" ]]; then
+      VALID=$((VALID+1))
+    fi
+
+    PREVIOUS="$LINE"
+  done < "$1"
+
+  echo "$2" "$VALID"
+}
+
+TEMP="temp.txt"
+rm -f "$TEMP" & touch "$TEMP"
+
+readarray -t NUMBERS < "$FILE"
+for ((i=0; i<"${#NUMBERS[@]} - 2"; i++)); do
+  echo $(("${NUMBERS[i]} + ${NUMBERS[i+1]} + ${NUMBERS[i+2]}"))  >> "$TEMP"
+done
+
+count "$FILE" "Part one:"
+count "$TEMP" "Part two:"
