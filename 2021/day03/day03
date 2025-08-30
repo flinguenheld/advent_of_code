@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+FILE="input.txt"
+# FILE="input_example.txt"
+
+TMP="temp.txt"
+TMP2="temp2.txt"
+: > "$TMP"
+: > "$TMP2"
+
+LINE_LENGTH=$(head -n1 "$FILE" | wc -c)
+HALF_LINES=$(echo "$(wc -l "$FILE" | cut -d" " -f1) / 2" | bc)
+
+for ((i = 1; i < "$LINE_LENGTH"; i++)); do
+  if [[ $(cat $FILE | cut -c"$i" | grep -c "0") -lt "$HALF_LINES" ]]; then
+    echo -e "1" >> "$TMP"
+  else
+    echo -e "0" >> "$TMP"
+  fi
+done
+
+GAMMA=$(tac "$TMP" | cat -n | awk '{print 2^($1-1) * $2 }' | paste -sd "+" | bc)
+EPSILON=$(tac "$TMP" | cat -n | awk '{print 2^($1-1) * !$2 }' | paste -sd "+" | bc)
+
+POWER=$(echo "$GAMMA * $EPSILON" | bc)
+echo "Part one: $POWER"
+
+# PART 2 #################################################################################
+bin_tmp_to_dec()
+{
+  head "$TMP" | fold -w1 > "$TMP2"
+  tac "$TMP2" | cat -n | awk '{print 2^($1-1) * $2 }' | paste -sd "+" | bc
+}
+
+filter_tmp()
+{
+  POSITION=$1
+  KEEP=$2
+
+  : > "$TMP2"
+  while read -r LINE; do
+    if [[ "${LINE:POSITION-1:1}" == "$KEEP" ]]; then
+      echo "$LINE" >> "$TMP2"
+    fi
+  done < "$TMP"
+
+  cp "$TMP2" "$TMP"
+  wc -l "$TMP" | cut -d" " -f1
+}
+
+cp "$FILE" "$TMP"
+for ((i = 1; i < "$LINE_LENGTH"; i++)); do
+  if [[ $(cat $TMP | cut -c"$i" | grep -c "1") -ge $(cat $TMP | cut -c"$i" | grep -c "0") ]]; then
+    KEEP="1"
+  else
+    KEEP="0"
+  fi
+
+  if [[ $(filter_tmp $i $KEEP) == "1" ]]; then
+    break
+  fi
+done
+OXYGEN=$(bin_tmp_to_dec)
+
+# --
+cp "$FILE" "$TMP"
+for ((i = 1; i < "$LINE_LENGTH"; i++)); do
+  if [[ $(cat $TMP | cut -c"$i" | grep -c "0") -le $(cat $TMP | cut -c"$i" | grep -c "1") ]]; then
+    KEEP="0"
+  else
+    KEEP="1"
+  fi
+
+  if [[ $(filter_tmp $i $KEEP) == "1" ]]; then
+    break
+  fi
+done
+CO2=$(bin_tmp_to_dec)
+
+LIFE_SUPPORT=$(echo "$OXYGEN * $CO2" | bc)
+echo "Part two: $LIFE_SUPPORT"
+
+rm -f "$TMP" "$TMP2"
