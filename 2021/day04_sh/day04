@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# Part one only -_-
+
+check_vertical() {
+  echo "$1" | awk -v who="$2" '{print $who}'
+}
+
+# FILE="input.txt"
+FILE="input_example.txt"
+
+TMP="temp.txt"
+: > "$TMP"
+
+tail -n+3 "$FILE" > "$TMP"
+sed -i "s/  / /g" "$TMP"
+sed -i "s/^ //g" "$TMP"
+sed -i "/^$/d" "$TMP"
+
+for NUMBER in $(head -n1 "$FILE" | sed 's/,/ /g'); do
+
+  sed -i "s/ $NUMBER / - /g" "$TMP"
+  sed -i "s/^$NUMBER /- /g" "$TMP"
+  sed -i "s/ $NUMBER$/ -/g" "$TMP"
+
+  while read -r ONE; read -r TWO; read -r THREE; read -r FOUR; read -r FIVE; do
+
+    if [[ $(echo "$ONE" | grep -ce "[0-9]") == "0" ||  $(echo "$TWO" | grep -ce "[0-9]") == "0"
+       || $(echo "$THREE" | grep -ce "[0-9]") == "0" || $(echo "$FOUR" | grep -ce "[0-9]") == "0"
+       || $(echo "$FIVE" | grep -ce "[0-9]") == "0" ]]; then
+
+       OK="true"
+    fi
+
+    for (( i=1; i<7; i++)); do
+      if [[ $(check_vertical "$ONE" "$i") == "-" && $(check_vertical "$TWO" "$i") == "-" &&
+            $(check_vertical "$THREE" "$i") == "-" &&  $(check_vertical "$FOUR" "$i") == "-" &&
+            $(check_vertical "$FIVE" "$i") == "-" ]]; then
+
+         OK="true"
+         break
+      fi
+    done
+
+    if [[ "$OK" == "true" ]]; then
+      # echo "here whith $NUMBER --------------"
+      SUM=$(echo "$ONE $TWO $THREE $FOUR $FIVE" | sed 's/-//g' | fold -sw2 | sed '/^ *$/d' | paste -sd'+' | bc)
+      echo "Part one: $(echo "$SUM * $NUMBER" | bc)"
+      OK=""
+      rm "$TMP" & exit 0
+    fi
+
+  done < "$TMP"
+done
