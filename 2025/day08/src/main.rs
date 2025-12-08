@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
+use std::collections::HashMap;
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Hash, Clone, Copy)]
 struct Point {
@@ -15,8 +14,8 @@ fn euclidean_distance(p1: &Point, p2: &Point) -> isize {
 }
 
 fn main() -> Result<()> {
-    // let (path, nb) = ("input.txt", 1000);
-    let (path, nb) = ("input_example.txt", 10);
+    let (path, nb) = ("input.txt", 1000);
+    // let (path, nb) = ("input_example.txt", 10);
 
     let mut boxes: Vec<Vec<Point>> = std::fs::read_to_string(path)?
         .lines()
@@ -52,55 +51,37 @@ fn main() -> Result<()> {
         let ((pt1, pt2), _) = distances.iter().min_by_key(|(_, v)| **v).unwrap();
 
         if i == nb {
-            let mut to_add = Vec::new();
-            while to_add.len() < 3 {
-                to_add.push(
+            let mut three_max = Vec::new();
+            while three_max.len() < 3 {
+                three_max.push(
                     boxes
                         .iter()
-                        .filter(|b| !to_add.contains(*b))
+                        .filter(|b| !three_max.contains(b))
                         .max_by_key(|b| b.len())
-                        .unwrap()
-                        .clone(),
+                        .unwrap(),
                 );
             }
-
             println!(
                 "Part one {}",
-                to_add.iter().fold(1, |acc, pt| acc * pt.len())
+                three_max.iter().fold(1, |acc, pt| acc * pt.len())
             );
-            // break;
         }
 
         // Merge groups --
         let group1 = boxes.iter().position(|b| b.contains(pt1)).unwrap();
         let mut g1 = boxes.remove(group1);
 
-        if boxes.is_empty() {
-            println!("{:?} - {:?}", pt1, pt2);
-            println!("Part two: {}", pt1.x * pt2.x);
-            break;
-        }
-
         if let Some(group2) = boxes.iter().position(|b| b.contains(pt2)) {
             g1.extend(boxes.remove(group2));
+            if boxes.is_empty() {
+                println!("Part two: {}", pt1.x * pt2.x);
+                break;
+            }
         }
         boxes.push(g1);
-        i += 1;
 
         distances.remove_entry(&(*pt1, *pt2));
+        i += 1;
     }
-
-    // println!("{:?}", distances.iter().find(|blah| blah.1 == &0));
-    // for b in boxes.iter() {
-    //     println!("{:?}", b);
-    // }
-
-    // println!(
-    //     "Part one: {}",
-    //     groups.iter().fold(0, |acc, g| acc + g.len())
-    // );
-
     Ok(())
 }
-
-// 8 -> NO :|
