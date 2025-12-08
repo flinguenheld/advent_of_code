@@ -1,5 +1,4 @@
 use anyhow::Result;
-use std::collections::HashMap;
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Hash, Clone, Copy)]
 struct Point {
@@ -30,40 +29,25 @@ fn main() -> Result<()> {
         })
         .collect();
 
-    // Get distances --
-    let mut distances: HashMap<(Point, Point), isize> = HashMap::new();
-    for from in boxes.iter() {
-        for to in boxes.iter() {
+    // Get & sort distances --
+    let mut distances: Vec<((Point, Point), isize)> = Vec::new();
+    for (i, from) in boxes.iter().enumerate() {
+        for to in boxes.iter().skip(i).filter(|b| *b != from) {
             let from = from.iter().next().unwrap();
             let to = to.iter().next().unwrap();
 
-            if to != from {
-                let d = euclidean_distance(from, to);
-                if !distances.contains_key(&(*to, *from)) {
-                    distances.insert((*from, *to), d);
-                }
-            }
+            distances.push(((*from, *to), euclidean_distance(from, to)));
         }
     }
+    distances.sort_unstable_by_key(|(_, v)| *v);
 
-    let mut i = 0;
-    loop {
-        let ((pt1, pt2), _) = distances.iter().min_by_key(|(_, v)| **v).unwrap();
-
+    // --
+    for (i, ((pt1, pt2), _)) in distances.iter().enumerate() {
         if i == nb {
-            let mut three_max = Vec::new();
-            while three_max.len() < 3 {
-                three_max.push(
-                    boxes
-                        .iter()
-                        .filter(|b| !three_max.contains(b))
-                        .max_by_key(|b| b.len())
-                        .unwrap(),
-                );
-            }
+            boxes.sort_unstable_by_key(|b| b.len());
             println!(
                 "Part one {}",
-                three_max.iter().fold(1, |acc, pt| acc * pt.len())
+                boxes.iter().rev().take(3).fold(1, |acc, pt| acc * pt.len())
             );
         }
 
@@ -79,9 +63,6 @@ fn main() -> Result<()> {
             }
         }
         boxes.push(g1);
-
-        distances.remove_entry(&(*pt1, *pt2));
-        i += 1;
     }
     Ok(())
 }
