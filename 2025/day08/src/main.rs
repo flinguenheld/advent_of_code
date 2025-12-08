@@ -15,27 +15,24 @@ fn euclidean_distance(p1: &Point, p2: &Point) -> isize {
 }
 
 fn main() -> Result<()> {
-    let path = "input.txt";
-    // let path = "input_example.txt";
+    let (path, nb) = ("input.txt", 1000);
+    // let (path, nb) = ("input_example.txt", 10);
 
-    let mut boxes: Vec<HashSet<Point>> = std::fs::read_to_string(path)?
+    let mut boxes: Vec<Vec<Point>> = std::fs::read_to_string(path)?
         .lines()
         .map(|line| {
             let mut fields = line.split(',');
 
-            HashSet::from_iter(vec![Point {
+            vec![Point {
                 x: fields.next().unwrap().parse::<i64>().unwrap(),
                 y: fields.next().unwrap().parse::<i64>().unwrap(),
                 z: fields.next().unwrap().parse::<i64>().unwrap(),
-            }])
+            }]
         })
         .collect();
 
-    // println!("{:?}", boxes);
-
+    // Get distances --
     let mut distances: HashMap<(Point, Point), isize> = HashMap::new();
-
-    // Get distances
     for from in boxes.iter() {
         for to in boxes.iter() {
             let from = from.iter().next().unwrap();
@@ -50,48 +47,54 @@ fn main() -> Result<()> {
         }
     }
 
-    // loop {
-    // println!("Shortest: {:?}",);
-    for i in 0..1000 {
-        if let Some(((pt1, pt2), value)) = distances.iter_mut().min_by_key(|(_, v)| **v) {
-            // if *value == isize::MAX {
-            //     break;
-            // }
-            *value = isize::MAX;
-            // println!("deal with these points {:?} & {:?}", pt1, pt2);
+    let mut i = 0;
+    loop {
+        if let Some(((pt1, pt2), value)) = distances
+            .iter_mut()
+            .filter(|(_, v)| **v > 0)
+            .min_by_key(|(_, v)| **v)
+        {
+            if i == nb {
+                let mut to_add = Vec::new();
+                while to_add.len() < 3 {
+                    to_add.push(
+                        boxes
+                            .iter()
+                            .filter(|b| !to_add.contains(*b))
+                            .max_by_key(|b| b.len())
+                            .unwrap()
+                            .clone(),
+                    );
+                }
 
-            // Merge groups
-            // Find both sides
-            let group1 = boxes.iter().position(|b| b.contains(pt1)).unwrap();
-            let g1 = boxes.remove(group1);
-            if let Some(group2) = boxes.iter().position(|b| b.contains(pt2)) {
-                let g2 = boxes.remove(group2);
-
-                boxes.push(g1.union(&g2).cloned().collect());
-            } else {
-                boxes.push(g1);
+                println!(
+                    "Part one {}",
+                    to_add.iter().fold(1, |acc, (pt)| acc * pt.len())
+                );
+                break;
             }
+            *value = 0;
+
+            // Merge groups --
+            let group1 = boxes.iter().position(|b| b.contains(pt1)).unwrap();
+            let mut g1 = boxes.remove(group1);
+            if let Some(group2) = boxes.iter().position(|b| b.contains(pt2)) {
+                g1.extend(boxes.remove(group2));
+            }
+            boxes.push(g1);
         }
+        i += 1;
     }
 
     // println!("{:?}", distances.iter().find(|blah| blah.1 == &0));
-    for b in boxes.iter() {
-        println!("{:?}", b);
-    }
+    // for b in boxes.iter() {
+    //     println!("{:?}", b);
+    // }
 
     // println!(
     //     "Part one: {}",
     //     groups.iter().fold(0, |acc, g| acc + g.len())
     // );
-
-    let mut total = 1;
-    for _ in 0..3 {
-        let longest = boxes.iter().max_by_key(|b| b.len()).unwrap().len();
-        total *= longest;
-        boxes.remove(boxes.iter().position(|b| b.len() == longest).unwrap());
-    }
-
-    println!("Part one {}", total);
 
     Ok(())
 }
